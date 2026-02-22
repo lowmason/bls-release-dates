@@ -5,7 +5,7 @@ Scrapes BLS news release archive pages for CES, SAE, and QCEW; downloads release
 ## Usage
 
 ```bash
-uv run python -m releases
+uv run python -m bls_revision_dates
 ```
 
 Output: `data/releases/{ces,sae,qcew}/*.htm` and `data/release_dates.parquet`.
@@ -15,7 +15,7 @@ Output: `data/releases/{ces,sae,qcew}/*.htm` and `data/release_dates.parquet`.
 From `release_dates.parquet`, build a vintage_dates dataset that adds a `revision` column:
 
 ```bash
-uv run python -m releases.vintage_dates
+uv run python -m bls_revision_dates.vintage_dates
 ```
 
 Output: `data/vintage_dates.parquet`.
@@ -32,6 +32,6 @@ Output: `data/vintage_dates.parquet`.
 
 Install without publishing to PyPI:
 
-- **Path (sibling repo or same machine):** From the other project root, run `uv add ../releases`. Or in that project’s `pyproject.toml`: `"releases @ file:///path/to/releases"`.
-- **Git:** `"releases @ git+https://github.com/YOUR_ORG/releases.git@v0.1.0"` (pin to a tag for reproducible installs).
-- **Wheel:** In this repo run `uv build`, then in the other project: `uv add /path/to/releases/dist/releases-0.1.0-py3-none-any.whl`.
+- **Path (sibling repo or same machine):** From the other project root, run `uv add ../releases`. Or in that project’s `pyproject.toml`: `"bls_revision_dates @ file:///path/to/releases"`.
+- **Git:** `"bls_revision_dates @ git+https://github.com/lowmason/releases.git@v0.1.0"` (pin to a tag for reproducible installs).
+- **Wheel:** In this repo run `uv build`, then in the other project: `uv add /path/to/releases/dist/bls_revision_dates-0.1.0-py3-none-any.whl`.
