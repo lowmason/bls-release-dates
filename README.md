@@ -1,4 +1,4 @@
-# BLS Release Date Scraper
+# bls-release-dates
 
 Scrapes BLS news release archive pages for CES, SAE, and QCEW; downloads release HTMLs and extracts release dates into a parquet dataset.
 
@@ -32,6 +32,6 @@ Output: `data/vintage_dates.parquet`.
 
 Install without publishing to PyPI:
 
-- **Path (sibling repo or same machine):** From the other project root, run `uv add ../releases`. Or in that project’s `pyproject.toml`: `"bls_revision_dates @ file:///path/to/releases"`.
-- **Git:** `"bls_revision_dates @ git+https://github.com/lowmason/releases.git@v0.1.0"` (pin to a tag for reproducible installs).
-- **Wheel:** In this repo run `uv build`, then in the other project: `uv add /path/to/releases/dist/bls_revision_dates-0.1.0-py3-none-any.whl`.
+- **Path (sibling repo or same machine):** From the other project root, run `uv add ../bls-release-dates`. Or in that project’s `pyproject.toml`: `"bls_revision_dates @ file:///path/to/bls-release-dates"`.
+- **Git:** `"bls_revision_dates @ git+https://github.com/lowmason/bls-release-dates.git@v0.1.0"` (pin to a tag for reproducible installs).
+- **Wheel:** In this repo run `uv build`, then in the other project: `uv add /path/to/bls-release-dates/dist/bls_revision_dates-0.1.0-py3-none-any.whl`.
