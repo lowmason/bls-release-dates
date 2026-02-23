@@ -18,9 +18,7 @@ from pathlib import Path
 
 import polars as pl
 
-from .config import DATA_DIR, PARQUET_PATH
-
-VINTAGE_DATES_PATH = DATA_DIR.parent / "vintage_dates.parquet"
+from .config import DATA_DIR, PARQUET_PATH, VINTAGE_DATES_PATH
 
 # Publication-specific revision sets (monthly-style; 9 added separately for CES/SAE).
 CES_MONTHLY_REVISIONS = [0, 1, 2]

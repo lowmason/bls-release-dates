@@ -6,6 +6,7 @@ from pathlib import Path
 BASE_URL = "https://www.bls.gov"
 DATA_DIR = Path("data/releases")
 PARQUET_PATH = Path("data/release_dates.parquet")
+VINTAGE_DATES_PATH = Path("data/vintage_dates.parquet")
 START_YEAR = 2010
 
 

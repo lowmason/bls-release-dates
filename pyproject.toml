@@ -1,5 +1,5 @@
 [project]
-name = "bls_release_dates"
+name = "bls-release-dates"
 version = "0.1.0"
 description = "Scrape BLS news releases for CES, SAE, and QCEW release dates"
 readme = "README.md"
@@ -13,7 +13,7 @@ dependencies = [
 ]
 
 [project.scripts]
-bls_release_dates = "bls_release_dates.__main__:main"
+bls-release-dates = "bls_release_dates.__main__:main"
 
 [build-system]
 requires = ["hatchling"]
