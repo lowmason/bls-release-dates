@@ -31,7 +31,7 @@ Writes `data/vintage_dates.parquet` with columns: `publication`, `ref_date`, `vi
 
 **benchmark_revision**: 0 = not a benchmark row; 1 = first benchmark; 2 = second benchmark (SAE re-replacement only).
 
-(For recent ref_dates, not all revisions may exist yet.) See `docs/ces.md`, `docs/sae.md`, `docs/qcew.md`.
+(For recent ref_dates, not all revisions may exist yet.)
 
 ### 3. Read the parquet data
 
