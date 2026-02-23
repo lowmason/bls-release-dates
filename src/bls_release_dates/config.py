@@ -12,7 +12,14 @@ START_YEAR = 2010
 
 @dataclass(frozen=True)
 class Publication:
-    """BLS publication: name, series code, index URL, frequency."""
+    """BLS publication: name, series code, index URL, and frequency.
+
+    Attributes:
+        name: Short name (e.g. "ces", "sae", "qcew").
+        series: BLS series code used in archive URLs (e.g. "empsit", "laus").
+        index_url: Full URL of the news release archive index page.
+        frequency: Either "monthly" or "quarterly".
+    """
 
     name: str
     series: str

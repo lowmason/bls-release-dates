@@ -1,6 +1,7 @@
 """Extract release (vintage) date from downloaded BLS release HTML files."""
 
 import re
+from collections.abc import Iterator
 from datetime import date
 from pathlib import Path
 
@@ -21,7 +22,14 @@ MONTH_TO_NUM = {name: i for i, name in enumerate(MONTH_NAMES, 1)}
 
 
 def parse_vintage_date(html_content: str) -> date | None:
-    """Extract release (vintage) date from embargo line in HTML. Returns None if not found."""
+    """Extract release (vintage) date from embargo line in HTML.
+
+    Args:
+        html_content: Raw HTML of a BLS release page.
+
+    Returns:
+        The release (vintage) date if found in the embargo line, None otherwise.
+    """
     match = VINTAGE_DATE_RE.search(html_content)
     if not match:
         return None
@@ -38,7 +46,15 @@ def parse_vintage_date(html_content: str) -> date | None:
 
 
 def parse_ref_from_path(path: Path) -> tuple[int, int] | None:
-    """From path like releases/ces/ces_2010_03.htm return (year, month) or None."""
+    """Parse reference year and month from a release filename.
+
+    Args:
+        path: Path to a file named like {pub}_{yyyy}_{mm}.htm (e.g. ces_2010_03.htm).
+
+    Returns:
+        (year, month) if the stem matches the expected pattern and values are valid,
+        None otherwise. Month is 1-12, year is 2000-2100.
+    """
     # filename: {pub}_{yyyy}_{mm}.htm
     stem = path.stem
     parts = stem.split("_")
@@ -54,14 +70,33 @@ def parse_ref_from_path(path: Path) -> tuple[int, int] | None:
 
 
 def ref_date_from_year_month(year: int, month: int) -> date:
-    """Reference date is always the 12th of the reference month."""
+    """Return the reference date for a given year and month.
+
+    The reference date is always the 12th of the reference month.
+
+    Args:
+        year: Reference year.
+        month: Reference month (1-12).
+
+    Returns:
+        date(year, month, 12).
+    """
     return date(year, month, 12)
 
 
 def parse_release_file(path: Path, publication_name: str) -> tuple[str, date, date] | None:
-    """
-    Read a release HTML file and return (publication, ref_date, vintage_date) or None.
-    ref_date is the 12th of the reference month; vintage_date from embargo line.
+    """Read a release HTML file and extract publication, ref_date, and vintage_date.
+
+    ref_date is the 12th of the reference month (from the filename); vintage_date
+    is parsed from the embargo line in the HTML.
+
+    Args:
+        path: Path to the release .htm file.
+        publication_name: Publication name (e.g. "ces", "sae", "qcew").
+
+    Returns:
+        (publication_name, ref_date, vintage_date) if both dates could be parsed,
+        None otherwise.
     """
     ref = parse_ref_from_path(path)
     if ref is None:
@@ -81,10 +116,18 @@ def parse_release_file(path: Path, publication_name: str) -> tuple[str, date, da
     return (publication_name, ref_d, vintage_d)
 
 
-def collect_release_dates(publication_name: str, releases_dir: Path):
-    """
-    Walk releases_dir for *.htm files and yield (publication, ref_date, vintage_date).
-    Logs a warning and skips entries where vintage date cannot be parsed.
+def collect_release_dates(publication_name: str, releases_dir: Path) -> Iterator[tuple[str, date, date]]:
+    """Walk a publication's release directory and yield parsed release rows.
+
+    Glob pattern used: {publication_name}_*.htm. Logs a warning and skips files
+    where the vintage date cannot be parsed.
+
+    Args:
+        publication_name: Publication name (e.g. "ces", "sae", "qcew").
+        releases_dir: Directory containing release .htm files.
+
+    Yields:
+        Tuples of (publication_name, ref_date, vintage_date) for each valid file.
     """
     import logging
 

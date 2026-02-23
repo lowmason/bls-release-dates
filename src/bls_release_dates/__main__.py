@@ -16,7 +16,11 @@ log = logging.getLogger(__name__)
 
 
 async def download_all_publications() -> None:
-    """Fetch each publication's index, parse entries, and download HTMLs."""
+    """Fetch each publication's index, parse entries, and download HTMLs.
+
+    Fetches the BLS archive index for each configured publication (CES, SAE, QCEW),
+    parses release entries, and downloads each release HTML into data/releases/{pub}/.
+    """
     async with httpx.AsyncClient(
         http2=True,
         follow_redirects=True,
@@ -31,7 +35,15 @@ async def download_all_publications() -> None:
 
 
 def build_dataframe() -> pl.DataFrame:
-    """Collect release dates from downloaded files and return a polars DataFrame."""
+    """Collect release dates from downloaded files and return a polars DataFrame.
+
+    Walks data/releases for each publication, parses *.htm files, and aggregates
+    (publication, ref_date, vintage_date) into a single DataFrame. Returns an
+    empty DataFrame with the correct schema if no releases are found.
+
+    Returns:
+        Polars DataFrame with columns publication, ref_date, vintage_date.
+    """
     rows: list[tuple[str, str, str]] = []
     for pub in PUBLICATIONS:
         releases_dir = DATA_DIR / pub.name
@@ -62,7 +74,11 @@ def build_dataframe() -> pl.DataFrame:
 
 
 def main() -> None:
-    """Download BLS releases, parse dates, and write parquet."""
+    """Download BLS releases, parse dates, and write parquet.
+
+    Fetches all publication indexes, downloads release HTMLs, extracts release
+    dates from the downloaded files, and writes data/release_dates.parquet.
+    """
     DATA_DIR.mkdir(parents=True, exist_ok=True)
 
     log.info("Downloading release HTMLs...")

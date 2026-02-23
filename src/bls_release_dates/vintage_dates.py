@@ -1,16 +1,21 @@
 """Build vintage_dates dataset from release_dates.parquet with revision codes.
 
 Revision semantics (publication-specific; may not hold for most recent ref_dates):
+
 - 0: initial release (vintage_date from release_dates.parquet)
 - 1, 2, ...: subsequent revisions (vintage_date shifted by 1, 2, ... months)
 - 9: benchmark revision (CES and SAE only)
 
-benchmark_revision: 0 = not a benchmark row; 1 = first benchmark; 2 = second benchmark (SAE re-replacement only).
+benchmark_revision: 0 = not a benchmark row; 1 = first benchmark; 2 = second
+benchmark (SAE re-replacement only).
 
-CES: revisions 0, 1, 2, and 9. Benchmark 9 only for March ref_date (vintage = Jan release next year); benchmark_revision=1.
-SAE: revisions 0, 1, and 9. Benchmark 9 twice for April–September ref_dates (double-revision):
-     first at March Y+1 (benchmark_revision=1), second at March Y+2 (benchmark_revision=2).
-QCEW: by quarter of ref_date — Q1: 0,1,2,3,4; Q2: 0,1,2,3; Q3: 0,1,2; Q4: 0,1. No benchmarks (benchmark_revision=0).
+- **CES:** revisions 0, 1, 2, and 9. Benchmark 9 only for March ref_date
+  (vintage = Jan release next year); benchmark_revision=1.
+- **SAE:** revisions 0, 1, and 9. Benchmark 9 twice for April–September ref_dates
+  (double-revision): first at March Y+1 (benchmark_revision=1), second at
+  March Y+2 (benchmark_revision=2).
+- **QCEW:** by quarter of ref_date — Q1: 0,1,2,3,4; Q2: 0,1,2,3; Q3: 0,1,2;
+  Q4: 0,1. No benchmarks (benchmark_revision=0).
 """
 
 from datetime import date
@@ -27,7 +32,14 @@ SAE_MONTHLY_REVISIONS = [0, 1]
 
 
 def _add_ces_revisions(df: pl.DataFrame) -> pl.DataFrame:
-    """CES: revisions 0, 1, 2 (and 9 added separately for March). benchmark_revision=0."""
+    """Add CES revisions 0, 1, 2 (benchmark 9 added separately for March).
+
+    Args:
+        df: Release dates DataFrame with publication, ref_date, vintage_date.
+
+    Returns:
+        DataFrame with CES rows expanded into revision 0, 1, 2; benchmark_revision=0.
+    """
     parts = []
     for n in CES_MONTHLY_REVISIONS:
         if n == 0:
@@ -49,7 +61,14 @@ def _add_ces_revisions(df: pl.DataFrame) -> pl.DataFrame:
 
 
 def _add_sae_revisions(df: pl.DataFrame) -> pl.DataFrame:
-    """SAE: revisions 0, 1 (and 9 added separately for Apr–Sep). benchmark_revision=0."""
+    """Add SAE revisions 0, 1 (benchmark 9 added separately for Apr–Sep).
+
+    Args:
+        df: Release dates DataFrame with publication, ref_date, vintage_date.
+
+    Returns:
+        DataFrame with SAE rows expanded into revision 0, 1; benchmark_revision=0.
+    """
     parts = []
     for n in SAE_MONTHLY_REVISIONS:
         if n == 0:
@@ -71,7 +90,14 @@ def _add_sae_revisions(df: pl.DataFrame) -> pl.DataFrame:
 
 
 def _add_qcew_revisions(df: pl.DataFrame) -> pl.DataFrame:
-    """QCEW: revisions 0..max by quarter (Q1=4, Q2=3, Q3=2, Q4=1)."""
+    """Add QCEW revisions 0..max by quarter (Q1=4, Q2=3, Q3=2, Q4=1).
+
+    Args:
+        df: Release dates DataFrame with publication, ref_date, vintage_date.
+
+    Returns:
+        DataFrame with QCEW rows expanded by quarter-specific revision counts.
+    """
     qcew = df.filter(pl.col("publication") == "qcew").with_columns(
         pl.col("ref_date").dt.month().alias("month"),
     )
@@ -108,7 +134,14 @@ def _add_qcew_revisions(df: pl.DataFrame) -> pl.DataFrame:
 
 
 def _ces_benchmark_vintage_dates(release_df: pl.DataFrame) -> pl.DataFrame:
-    """CES: March ref_date → benchmark at vintage_date of (ces, January 12, year+1)."""
+    """Add CES benchmark rows: March ref_date → benchmark at Jan Y+1 vintage.
+
+    Args:
+        release_df: Release dates DataFrame (publication, ref_date, vintage_date).
+
+    Returns:
+        DataFrame of CES benchmark rows (revision=9, benchmark_revision=1).
+    """
     ces = release_df.filter(pl.col("publication") == "ces")
     jan_releases = ces.filter(pl.col("ref_date").dt.month() == 1).select(
         pl.col("ref_date").dt.year().alias("year"),
@@ -135,7 +168,17 @@ def _ces_benchmark_vintage_dates(release_df: pl.DataFrame) -> pl.DataFrame:
 
 
 def _sae_benchmark_vintage_dates(release_df: pl.DataFrame) -> pl.DataFrame:
-    """SAE: ref_date April–September Y → two benchmarks: March Y+1 (first) and March Y+2 (re-replacement)."""
+    """Add SAE benchmark rows: April–September ref_date → two benchmarks.
+
+    First benchmark at March Y+1 (benchmark_revision=1), second at March Y+2
+    (benchmark_revision=2, re-replacement).
+
+    Args:
+        release_df: Release dates DataFrame (publication, ref_date, vintage_date).
+
+    Returns:
+        DataFrame of SAE benchmark rows (revision=9, benchmark_revision 1 or 2).
+    """
     sae = release_df.filter(pl.col("publication") == "sae")
     march_releases = sae.filter(pl.col("ref_date").dt.month() == 3).select(
         pl.col("ref_date").dt.year().alias("year"),
@@ -177,7 +220,21 @@ def _sae_benchmark_vintage_dates(release_df: pl.DataFrame) -> pl.DataFrame:
 
 
 def build_vintage_dates(release_dates_path: Path | None = None) -> pl.DataFrame:
-    """Build vintage_dates DataFrame from release_dates parquet."""
+    """Build vintage_dates DataFrame from release_dates parquet.
+
+    Applies publication-specific revision logic (CES 0,1,2 + benchmark;
+    SAE 0,1 + benchmarks; QCEW 0..max by quarter), filters to vintage_date
+    <= today, and sorts by publication, ref_date, vintage_date, revision,
+    benchmark_revision.
+
+    Args:
+        release_dates_path: Path to release_dates.parquet. Defaults to
+            config.PARQUET_PATH.
+
+    Returns:
+        Polars DataFrame with columns publication, ref_date, vintage_date,
+        revision, benchmark_revision.
+    """
     path = release_dates_path or PARQUET_PATH
     df = pl.read_parquet(path)
 
@@ -202,7 +259,11 @@ def build_vintage_dates(release_dates_path: Path | None = None) -> pl.DataFrame:
 
 
 def main() -> None:
-    """Build and write vintage_dates.parquet."""
+    """Build vintage_dates from release_dates and write data/vintage_dates.parquet.
+
+    Reads data/release_dates.parquet, applies revision logic, and writes
+    data/vintage_dates.parquet. Creates the output directory if needed.
+    """
     df = build_vintage_dates()
     VINTAGE_DATES_PATH.parent.mkdir(parents=True, exist_ok=True)
     df.write_parquet(VINTAGE_DATES_PATH)
