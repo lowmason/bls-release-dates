@@ -14,8 +14,8 @@ benchmark (SAE re-replacement only).
 - **SAE:** revisions 0, 1, and 9. Benchmark 9 twice for April–September ref_dates
   (double-revision): first at March Y+1 (benchmark_revision=1), second at
   March Y+2 (benchmark_revision=2).
-- **QCEW:** by quarter of ref_date — Q1: 0,1,2,3,4; Q2: 0,1,2,3; Q3: 0,1,2;
-  Q4: 0,1. No benchmarks (benchmark_revision=0).
+- **QCEW:** by quarter of ref_date — Q1: 0,1,2,3,4,5; Q2: 0,1,2,3,4; Q3: 0,1,2,3;
+  Q4: 0,1,2. No benchmarks (benchmark_revision=0).
 """
 
 from datetime import date
@@ -90,7 +90,7 @@ def _add_sae_revisions(df: pl.DataFrame) -> pl.DataFrame:
 
 
 def _add_qcew_revisions(df: pl.DataFrame) -> pl.DataFrame:
-    """Add QCEW revisions 0..max by quarter (Q1=4, Q2=3, Q3=2, Q4=1).
+    """Add QCEW revisions 0..max by quarter (Q1=5, Q2=4, Q3=3, Q4=2).
 
     Args:
         df: Release dates DataFrame with publication, ref_date, vintage_date.
@@ -103,17 +103,17 @@ def _add_qcew_revisions(df: pl.DataFrame) -> pl.DataFrame:
     )
     max_rev = (
         pl.when(pl.col("month").is_between(1, 3))
-        .then(4)
+        .then(5)
         .when(pl.col("month").is_between(4, 6))
-        .then(3)
+        .then(4)
         .when(pl.col("month").is_between(7, 9))
-        .then(2)
-        .otherwise(1)
+        .then(3)
+        .otherwise(2)
         .alias("max_rev")
     )
     qcew = qcew.with_columns(max_rev)
     parts = []
-    for n in range(5):  # 0..4
+    for n in range(6):  # 0..5
         if n == 0:
             parts.append(
                 qcew.with_columns(
